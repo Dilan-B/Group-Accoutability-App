@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import 'expo-dev-client';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
