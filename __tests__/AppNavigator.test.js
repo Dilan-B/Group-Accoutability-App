@@ -9,6 +9,15 @@ jest.mock('../src/features/auth/authStore', () => ({
   useAuthStore: (selector) => mockUseAuthStore(selector),
 }));
 
+jest.mock('../src/navigation/RootTabs', () => {
+  const ReactLocal = require('react');
+  const { Text } = require('react-native');
+
+  return {
+    RootTabs: () => ReactLocal.createElement(Text, null, 'RootTabsMock'),
+  };
+});
+
 function withState(state) {
   mockUseAuthStore.mockImplementation((selector) => selector(state));
 }
@@ -30,5 +39,12 @@ describe('AppNavigator guard behavior', () => {
     const { getByText } = render(<AppNavigator />);
 
     expect(getByText('Welcome to Lockd')).toBeTruthy();
+  });
+
+  it('shows root tabs for signed-in users with completed profile', () => {
+    withState({ authStatus: 'signed_in', profile: { displayName: 'Test User' } });
+    const { getByText } = render(<AppNavigator />);
+
+    expect(getByText('RootTabsMock')).toBeTruthy();
   });
 });

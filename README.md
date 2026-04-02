@@ -1,7 +1,7 @@
 # Lockd (Phase 1)
 
 Lockd is a mobile accountability app built with Expo + React Native + Firebase.
-This repository currently includes Milestone 0 + Milestone 1 foundations from `docs/PLAN_phase1.md`.
+This repository currently includes Milestone 0 + Milestone 1 + Milestone 2 foundations from `docs/PLAN_phase1.md`.
 
 ## Implemented so far
 
@@ -20,8 +20,15 @@ This repository currently includes Milestone 0 + Milestone 1 foundations from `d
 - Logout flow
 - Guarded app navigation for signed-out vs signed-in users (`src/navigation/AppNavigator.js`)
 
+### Milestone 2
+- Create squad flow (private by default)
+- Join squad by invite code
+- Squad switcher and selected squad state
+- Squad member list view with basic role display (`admin` / `member`)
+
 ## Deferred (not implemented yet)
-- Squads, goals, check-ins, feed reactions (Milestones 2+)
+- Goals and check-ins (Milestone 3+)
+- Feed and reactions (Milestone 4+)
 - Lock-in mode implementation
 - Points / streaks
 - Notifications
