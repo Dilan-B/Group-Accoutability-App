@@ -1,26 +1,31 @@
 # Lockd (Phase 1)
 
 Lockd is a mobile accountability app built with Expo + React Native + Firebase.
-This repository currently contains **Milestone 0** bootstrap work from `docs/PLAN_phase1.md`.
+This repository currently includes Milestone 0 + Milestone 1 foundations from `docs/PLAN_phase1.md`.
 
-## Milestone 0 status
+## Implemented so far
 
-Implemented:
-- Expo SDK 55 project scaffold with Expo Dev Client workflow
-- Bottom tabs with placeholder screens only:
-  - Feed
-  - Goals
-  - Lock-in (placeholder only)
-  - Squad / Profile
-- Phase-1 folder structure (`src/features/*`, navigation, shared modules, `firebase/`, `functions/`)
-- Firebase config bootstrap file using `EXPO_PUBLIC_*` variables
-- ESLint and Jest (with `jest-expo`) setup
+### Milestone 0
+- Expo SDK 55 scaffold with Expo Dev Client workflow
+- Bottom tabs shell: Feed, Goals, Lock-in (placeholder), Squad/Profile
+- Project structure + Firebase bootstrap files
+- ESLint + Jest setup
 
-Deferred on purpose (not in Milestone 0):
+### Milestone 1
+- Firebase app/bootstrap through `firebase/client.js`
+- Auth state management with Zustand (`src/features/auth/authStore.js`)
+- Sign-in flow UI with phone-first option and email fallback (`src/features/auth/AuthScreen.js`)
+- Profile create/edit for display name, avatar URL, and optional tagline (`src/features/profile/ProfileScreen.js`)
+- `users/{uid}` profile document initialization on first successful auth
+- Logout flow
+- Guarded app navigation for signed-out vs signed-in users (`src/navigation/AppNavigator.js`)
+
+## Deferred (not implemented yet)
+- Squads, goals, check-ins, feed reactions (Milestones 2+)
 - Lock-in mode implementation
 - Points / streaks
 - Notifications
-- Suggestion flows
+- Suggestions
 
 ## Requirements
 
@@ -47,34 +52,18 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 EXPO_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-## Expo Dev Client workflow
-
-Start Metro for dev client:
+## Run
 
 ```bash
 npm run start
-```
-
-Build/run the native dev client:
-
-```bash
 npm run android
 npm run ios
 ```
 
-## Scripts
+## Quality checks
 
 ```bash
 npm run lint
 npm run test
 npm run check
 ```
-
-### Package alignment note
-
-If you update Expo-managed packages, prefer Expo commands so versions stay SDK-compatible:
-
-```bash
-npx expo install expo-dev-client react-native react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-screens expo-status-bar
-```
-

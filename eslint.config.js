@@ -20,6 +20,7 @@ module.exports = [
         describe: 'readonly',
         it: 'readonly',
         expect: 'readonly',
+        afterEach: 'readonly',
       },
     },
     rules: {

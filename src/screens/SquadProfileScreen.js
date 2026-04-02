@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../components/PlaceholderScreen';
+import { ProfileScreen } from '../features/profile/ProfileScreen';
 
 export function SquadProfileScreen() {
-  return <PlaceholderScreen title="Squad / Profile" description="Auth, profile, and squads begin in Milestones 1 and 2." />;
+  return <ProfileScreen />;
 }
