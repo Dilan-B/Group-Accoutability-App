@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Lockd",
+    "slug": "lockd",
+    "scheme": "lockd",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "jsEngine": "hermes",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
