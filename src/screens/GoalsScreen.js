@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../components/PlaceholderScreen';
+import { GoalsScreenContent } from '../features/goals/GoalsScreenContent';
 
 export function GoalsScreen() {
-  return <PlaceholderScreen title="Goals" description="Goal creation and check-ins arrive in Milestone 3." />;
+  return <GoalsScreenContent />;
 }

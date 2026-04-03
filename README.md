@@ -6,7 +6,7 @@ This repository currently includes Milestone 0 + Milestone 1 + Milestone 2 found
 ## Implemented so far
 
 ### Milestone 0
-- Expo SDK 54 scaffold with Expo Go-compatible workflow
+- Expo SDK 54 scaffold with Expo Dev Client workflow
 - Bottom tabs shell: Feed, Goals, Lock-in (placeholder), Squad/Profile
 - Project structure + Firebase bootstrap files
 - ESLint + Jest setup
@@ -59,11 +59,10 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 EXPO_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-## Run
+## Run (Expo Dev Client)
 
 ```bash
 npm run start
-# scan QR code with Expo Go on iPhone
 npm run android
 npm run ios
 ```

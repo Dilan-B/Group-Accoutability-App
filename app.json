@@ -9,6 +9,9 @@
     "jsEngine": "hermes",
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "plugins": [
+      "expo-dev-client"
     ]
   }
 }
