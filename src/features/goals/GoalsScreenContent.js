@@ -1,81 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
-import { Button, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { Button, Divider, Text, TextInput } from 'react-native-paper';
 
 import { useAuthStore } from '../auth/authStore';
 import { useSquadStore } from '../squads/squadStore';
 import { useGoalsStore } from './goalsStore';
 
-function GoalForm({ onSubmit, submitLabel, defaults, loading }) {
-  const { control, handleSubmit } = useForm({
-    defaultValues: defaults,
-  });
-
-  return (
-    <View style={styles.card}>
-      <Controller
-        control={control}
-        name="title"
-        rules={{ required: true }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput mode="outlined" label="Goal Title" value={value} onChangeText={onChange} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="description"
-        render={({ field: { onChange, value } }) => (
-          <TextInput mode="outlined" label="Description" value={value} onChangeText={onChange} />
-        )}
-      />
-      <Controller
-        control={control}
-        name="frequency"
-        render={({ field: { onChange, value } }) => (
-          <SegmentedButtons
-            value={value}
-            onValueChange={onChange}
-            buttons={[
-              { value: 'daily', label: 'Daily' },
-              { value: 'weekly', label: 'Weekly' },
-            ]}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="target_value"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            mode="outlined"
-            label="Target Value (Optional)"
-            value={value}
-            onChangeText={onChange}
-            keyboardType="numeric"
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="target_unit"
-        render={({ field: { onChange, value } }) => (
-          <TextInput mode="outlined" label="Target Unit (Optional)" value={value} onChangeText={onChange} />
-        )}
-      />
-
-      <Button mode="contained" onPress={handleSubmit(onSubmit)} loading={loading}>
-        {submitLabel}
-      </Button>
-    </View>
-  );
-}
-
 function CheckinForm({ onSubmit, loading }) {
-  const { control, handleSubmit, reset } = useForm({ defaultValues: { note: '', numeric_progress: '' } });
+  const { control, handleSubmit, reset } = useForm({ defaultValues: { note: '', progress_update: '' } });
 
   return (
-    <View style={styles.inlineCard}>
+    <View style={styles.checkinCard}>
       <Controller
         control={control}
         name="note"
@@ -85,14 +21,14 @@ function CheckinForm({ onSubmit, loading }) {
       />
       <Controller
         control={control}
-        name="numeric_progress"
+        name="progress_update"
         render={({ field: { onChange, value } }) => (
           <TextInput
             mode="outlined"
-            label="Numeric Progress (Optional)"
+            label="Progress Update (Optional)"
             value={value}
             onChangeText={onChange}
-            keyboardType="numeric"
+            placeholder="What changed since last check-in?"
           />
         )}
       />
@@ -101,10 +37,10 @@ function CheckinForm({ onSubmit, loading }) {
         loading={loading}
         onPress={handleSubmit((values) => {
           onSubmit(values);
-          reset();
+          reset({ note: '', progress_update: '' });
         })}
       >
-        Check-in Complete
+        Check-in
       </Button>
     </View>
   );
@@ -126,6 +62,17 @@ export function GoalsScreenContent() {
 
   const [editingGoalId, setEditingGoalId] = useState('');
 
+  const { control, handleSubmit, reset } = useForm({
+    defaultValues: {
+      title: '',
+      description: '',
+      deadline: '',
+      success_criteria: '',
+      target_value: '',
+      target_unit: '',
+    },
+  });
+
   useEffect(() => {
     if (!selectedSquadId || !user?.uid) {
       return;
@@ -135,6 +82,29 @@ export function GoalsScreenContent() {
   }, [loadGoals, selectedSquadId, user?.uid]);
 
   const editingGoal = useMemo(() => goals.find((goal) => goal.id === editingGoalId) || null, [goals, editingGoalId]);
+
+  useEffect(() => {
+    if (!editingGoal) {
+      reset({
+        title: '',
+        description: '',
+        deadline: '',
+        success_criteria: '',
+        target_value: '',
+        target_unit: '',
+      });
+      return;
+    }
+
+    reset({
+      title: editingGoal.title || '',
+      description: editingGoal.description || '',
+      deadline: editingGoal.deadline || '',
+      success_criteria: editingGoal.success_criteria || '',
+      target_value: editingGoal.target_value == null ? '' : String(editingGoal.target_value),
+      target_unit: editingGoal.target_unit || '',
+    });
+  }, [editingGoal, reset]);
 
   if (!selectedSquadId) {
     return (
@@ -148,35 +118,108 @@ export function GoalsScreenContent() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text variant="headlineSmall">Goals</Text>
 
-      <GoalForm
-        loading={loading}
-        submitLabel={editingGoal ? 'Update Goal' : 'Create Goal'}
-        defaults={{
-          title: editingGoal?.title || '',
-          description: editingGoal?.description || '',
-          frequency: editingGoal?.frequency || 'daily',
-          target_value: editingGoal?.target_value ? String(editingGoal.target_value) : '',
-          target_unit: editingGoal?.target_unit || '',
-        }}
-        onSubmit={async (values) => {
-          if (editingGoal) {
-            await editGoal({ goalId: editingGoal.id, values, squadId: selectedSquadId, uid: user.uid });
-            setEditingGoalId('');
-            return;
-          }
+      <View style={styles.formCard}>
+        <Controller
+          control={control}
+          name="title"
+          rules={{ required: true }}
+          render={({ field: { onChange, value } }) => (
+            <TextInput mode="outlined" label="Goal Title" value={value} onChangeText={onChange} />
+          )}
+        />
+        <Controller
+          control={control}
+          name="description"
+          render={({ field: { onChange, value } }) => (
+            <TextInput mode="outlined" label="Description (Optional)" value={value} onChangeText={onChange} multiline />
+          )}
+        />
+        <Controller
+          control={control}
+          name="deadline"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              mode="outlined"
+              label="Deadline (Optional)"
+              value={value}
+              onChangeText={onChange}
+              placeholder="e.g. 2026-05-01 or Friday"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="success_criteria"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              mode="outlined"
+              label="What does done look like? (Optional)"
+              value={value}
+              onChangeText={onChange}
+              multiline
+            />
+          )}
+        />
+        <Text variant="labelMedium">Advanced (Optional)</Text>
+        <Controller
+          control={control}
+          name="target_value"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              mode="outlined"
+              label="Target Value"
+              value={value}
+              onChangeText={onChange}
+              keyboardType="numeric"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="target_unit"
+          render={({ field: { onChange, value } }) => (
+            <TextInput mode="outlined" label="Target Unit" value={value} onChangeText={onChange} />
+          )}
+        />
 
-          await addGoal({ squadId: selectedSquadId, uid: user.uid, values });
-        }}
-      />
+        <Button
+          mode="contained"
+          loading={loading}
+          onPress={handleSubmit(async (values) => {
+            if (!user?.uid) {
+              return;
+            }
+
+            if (editingGoal) {
+              await editGoal({ goalId: editingGoal.id, values, squadId: selectedSquadId, uid: user.uid });
+              setEditingGoalId('');
+              return;
+            }
+
+            await addGoal({ squadId: selectedSquadId, uid: user.uid, values });
+          })}
+        >
+          {editingGoal ? 'Update Goal' : 'Create Goal'}
+        </Button>
+
+        {editingGoal ? (
+          <Button mode="outlined" onPress={() => setEditingGoalId('')}>
+            Cancel Edit
+          </Button>
+        ) : null}
+      </View>
+
+      <Divider />
 
       {goals.length === 0 ? <Text>No goals yet for this squad.</Text> : null}
 
       {goals.map((goal) => (
         <View key={goal.id} style={styles.goalCard}>
           <Text variant="titleMedium">{goal.title}</Text>
-          <Text>{goal.description || 'No description'}</Text>
-          <Text>Frequency: {goal.frequency}</Text>
-          <Text>Status: {goal.is_active ? 'Active' : 'Paused/Archived'}</Text>
+          {!!goal.description ? <Text>{goal.description}</Text> : <Text>No description</Text>}
+          {!!goal.deadline ? <Text>Deadline: {goal.deadline}</Text> : null}
+          {!!goal.success_criteria ? <Text>Done looks like: {goal.success_criteria}</Text> : null}
+          <Text>Status: {goal.is_active ? 'Active' : 'Paused'}</Text>
 
           <View style={styles.row}>
             <Button mode="outlined" onPress={() => setEditingGoalId(goal.id)}>
@@ -208,7 +251,7 @@ export function GoalsScreenContent() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    gap: 12,
+    gap: 14,
     padding: 16,
   },
   centered: {
@@ -217,12 +260,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  card: {
-    gap: 8,
-  },
-  inlineCard: {
-    gap: 8,
-    marginTop: 10,
+  formCard: {
+    gap: 10,
   },
   goalCard: {
     borderColor: '#DDDDDD',
@@ -230,6 +269,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     padding: 12,
+  },
+  checkinCard: {
+    gap: 8,
+    marginTop: 8,
   },
   row: {
     flexDirection: 'row',

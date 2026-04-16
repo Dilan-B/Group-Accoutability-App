@@ -1,4 +1,4 @@
-import { buildCheckInPayload, canCreateActiveGoal } from '../src/features/goals/goalsUtils';
+import { buildCheckInPayload, canCreateActiveGoal, normalizeGoalInput } from '../src/features/goals/goalsUtils';
 
 describe('goals utils', () => {
   it('limits active goals to 8 per squad/user', () => {
@@ -9,11 +9,32 @@ describe('goals utils', () => {
     expect(canCreateActiveGoal(eight)).toBe(false);
   });
 
-  it('normalizes check-in payload optional fields', () => {
-    expect(buildCheckInPayload({ note: '', numeric_progress: '' })).toEqual({ note: '', numeric_progress: null });
-    expect(buildCheckInPayload({ note: 'Done', numeric_progress: '5' })).toEqual({
-      note: 'Done',
-      numeric_progress: 5,
+  it('normalizes flexible goal fields including deadline and success criteria', () => {
+    expect(
+      normalizeGoalInput({
+        title: ' Finish coding milestone 3 ',
+        description: '  polish goals  ',
+        deadline: ' Friday ',
+        success_criteria: ' PR merged ',
+        target_value: '100',
+        target_unit: ' dollars ',
+      }),
+    ).toEqual({
+      title: 'Finish coding milestone 3',
+      description: 'polish goals',
+      deadline: 'Friday',
+      success_criteria: 'PR merged',
+      target_value: 100,
+      target_unit: 'dollars',
     });
+  });
+
+  it('accepts flexible text-based check-in payload', () => {
+    expect(buildCheckInPayload({ note: '  worked on this  ', progress_update: ' wrote intro section ' })).toEqual({
+      note: 'worked on this',
+      progress_update: 'wrote intro section',
+    });
+
+    expect(buildCheckInPayload({})).toEqual({ note: '', progress_update: '' });
   });
 });

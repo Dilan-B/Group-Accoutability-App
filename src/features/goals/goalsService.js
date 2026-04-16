@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../../../firebase/client';
-import { canCreateActiveGoal } from './goalsUtils';
+import { canCreateActiveGoal, normalizeGoalInput } from './goalsUtils';
 
 export async function listGoalsForSquadUser({ squadId, uid }) {
   const snapshot = await getDocs(
@@ -31,14 +31,17 @@ export async function createGoal({ squadId, uid, values, existingGoals }) {
     throw new Error('Max 8 active goals allowed per squad.');
   }
 
+  const normalized = normalizeGoalInput(values);
+
   await addDoc(collection(db, 'goals'), {
     uid,
     squad_id: squadId,
-    title: values.title.trim(),
-    description: values.description || '',
-    frequency: values.frequency,
-    target_value: values.target_value ? Number(values.target_value) : null,
-    target_unit: values.target_unit || '',
+    title: normalized.title,
+    description: normalized.description,
+    deadline: normalized.deadline || null,
+    success_criteria: normalized.success_criteria || null,
+    target_value: normalized.target_value,
+    target_unit: normalized.target_unit || null,
     is_active: true,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
@@ -46,12 +49,15 @@ export async function createGoal({ squadId, uid, values, existingGoals }) {
 }
 
 export async function updateGoal({ goalId, values }) {
+  const normalized = normalizeGoalInput(values);
+
   await updateDoc(doc(db, 'goals', goalId), {
-    title: values.title.trim(),
-    description: values.description || '',
-    frequency: values.frequency,
-    target_value: values.target_value ? Number(values.target_value) : null,
-    target_unit: values.target_unit || '',
+    title: normalized.title,
+    description: normalized.description,
+    deadline: normalized.deadline || null,
+    success_criteria: normalized.success_criteria || null,
+    target_value: normalized.target_value,
+    target_unit: normalized.target_unit || null,
     updated_at: serverTimestamp(),
   });
 }
@@ -69,7 +75,7 @@ export async function createCheckin({ goal, uid, squadId, payload }) {
     uid,
     squad_id: squadId,
     note: payload.note,
-    numeric_progress: payload.numeric_progress,
+    progress_update: payload.progress_update,
     completed: true,
     created_at: serverTimestamp(),
   });
