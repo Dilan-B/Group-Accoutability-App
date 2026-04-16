@@ -7,6 +7,13 @@ export function canCreateActiveGoal(goals) {
 }
 
 /**
+ * @param {{ is_archived?: boolean }} goal
+ */
+export function isGoalVisible(goal) {
+  return goal?.is_archived !== true;
+}
+
+/**
  * @param {{
  *  title?: string,
  *  description?: string,

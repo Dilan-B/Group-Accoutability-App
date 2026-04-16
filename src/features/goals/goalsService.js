@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../../../firebase/client';
-import { canCreateActiveGoal, normalizeGoalInput } from './goalsUtils';
+import { canCreateActiveGoal, isGoalVisible, normalizeGoalInput } from './goalsUtils';
 
 export async function listGoalsForSquadUser({ squadId, uid }) {
   const snapshot = await getDocs(
@@ -23,7 +23,9 @@ export async function listGoalsForSquadUser({ squadId, uid }) {
     ),
   );
 
-  return snapshot.docs.map((goal) => ({ id: goal.id, ...goal.data() }));
+  return snapshot.docs
+    .map((goal) => ({ id: goal.id, ...goal.data() }))
+    .filter((goal) => isGoalVisible(goal));
 }
 
 export async function createGoal({ squadId, uid, values, existingGoals }) {
@@ -41,6 +43,7 @@ export async function createGoal({ squadId, uid, values, existingGoals }) {
     deadline: normalized.deadline || null,
     success_criteria: normalized.success_criteria || null,
     is_active: true,
+    is_archived: false,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
   });
@@ -61,6 +64,15 @@ export async function updateGoal({ goalId, values }) {
 export async function setGoalActiveState({ goalId, isActive }) {
   await updateDoc(doc(db, 'goals', goalId), {
     is_active: isActive,
+    updated_at: serverTimestamp(),
+  });
+}
+
+export async function archiveGoal({ goalId }) {
+  await updateDoc(doc(db, 'goals', goalId), {
+    is_archived: true,
+    is_active: false,
+    archived_at: serverTimestamp(),
     updated_at: serverTimestamp(),
   });
 }

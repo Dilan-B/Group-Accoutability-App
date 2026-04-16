@@ -47,6 +47,58 @@ function CheckinForm({ onSubmit, loading }) {
   );
 }
 
+function GoalEditCard({ goal, loading, onSave, onCancel }) {
+  const { control, handleSubmit } = useForm({ defaultValues: buildGoalFormDefaults(goal) });
+
+  return (
+    <View style={styles.editCard}>
+      <Controller
+        control={control}
+        name="title"
+        rules={{ required: true }}
+        render={({ field: { onChange, value } }) => (
+          <TextInput mode="outlined" label="Goal Title" value={value} onChangeText={onChange} />
+        )}
+      />
+      <Controller
+        control={control}
+        name="description"
+        render={({ field: { onChange, value } }) => (
+          <TextInput mode="outlined" label="Description (Optional)" value={value} onChangeText={onChange} multiline />
+        )}
+      />
+      <Controller
+        control={control}
+        name="deadline"
+        render={({ field: { onChange, value } }) => (
+          <TextInput mode="outlined" label="Deadline (Optional)" value={value} onChangeText={onChange} />
+        )}
+      />
+      <Controller
+        control={control}
+        name="success_criteria"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            mode="outlined"
+            label="What does done look like? (Optional)"
+            value={value}
+            onChangeText={onChange}
+            multiline
+          />
+        )}
+      />
+      <View style={styles.row}>
+        <Button mode="contained" loading={loading} onPress={handleSubmit(onSave)}>
+          Save Changes
+        </Button>
+        <Button mode="outlined" onPress={onCancel}>
+          Cancel
+        </Button>
+      </View>
+    </View>
+  );
+}
+
 export function GoalsScreenContent() {
   const user = useAuthStore((state) => state.user);
   const selectedSquadId = useSquadStore((state) => state.selectedSquadId);
@@ -57,11 +109,13 @@ export function GoalsScreenContent() {
   const loadGoals = useGoalsStore((state) => state.loadGoals);
   const addGoal = useGoalsStore((state) => state.addGoal);
   const editGoal = useGoalsStore((state) => state.editGoal);
+  const archiveGoalById = useGoalsStore((state) => state.archiveGoalById);
   const pauseGoal = useGoalsStore((state) => state.pauseGoal);
   const reactivateGoal = useGoalsStore((state) => state.reactivateGoal);
   const checkInGoal = useGoalsStore((state) => state.checkInGoal);
 
   const [editingGoalId, setEditingGoalId] = useState('');
+  const [confirmArchiveGoalId, setConfirmArchiveGoalId] = useState('');
 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: buildGoalFormDefaults(null),
@@ -78,8 +132,12 @@ export function GoalsScreenContent() {
   const editingGoal = useMemo(() => goals.find((goal) => goal.id === editingGoalId) || null, [goals, editingGoalId]);
 
   useEffect(() => {
-    reset(buildGoalFormDefaults(editingGoal));
-  }, [editingGoal, reset]);
+    if (!editingGoal) {
+      return;
+    }
+
+    setConfirmArchiveGoalId('');
+  }, [editingGoal]);
 
   if (!selectedSquadId) {
     return (
@@ -144,28 +202,17 @@ export function GoalsScreenContent() {
               return;
             }
 
-            if (editingGoal) {
-              await editGoal({ goalId: editingGoal.id, values, squadId: selectedSquadId, uid: user.uid });
-              setEditingGoalId('');
-              return;
-            }
-
             await addGoal({ squadId: selectedSquadId, uid: user.uid, values });
+            reset(buildGoalFormDefaults(null));
           })}
         >
-          {editingGoal ? 'Update Goal' : 'Create Goal'}
+          Create Goal
         </Button>
-
-        {editingGoal ? (
-          <Button mode="outlined" onPress={() => setEditingGoalId('')}>
-            Cancel Edit
-          </Button>
-        ) : null}
       </View>
 
       <Divider />
 
-      {goals.length === 0 ? <Text>No goals yet for this squad.</Text> : null}
+      {goals.length === 0 ? <Text>No active goals yet for this squad.</Text> : null}
 
       {goals.map((goal) => (
         <View key={goal.id} style={styles.goalCard}>
@@ -191,7 +238,43 @@ export function GoalsScreenContent() {
                 Reactivate
               </Button>
             )}
+            {confirmArchiveGoalId === goal.id ? (
+              <Button
+                mode="contained"
+                onPress={async () => {
+                  await archiveGoalById({ goalId: goal.id, squadId: selectedSquadId, uid: user.uid });
+                  setConfirmArchiveGoalId('');
+                  if (editingGoalId === goal.id) {
+                    setEditingGoalId('');
+                  }
+                }}
+              >
+                Confirm Archive
+              </Button>
+            ) : (
+              <Button mode="outlined" onPress={() => setConfirmArchiveGoalId(goal.id)}>
+                Archive
+              </Button>
+            )}
           </View>
+
+          {confirmArchiveGoalId === goal.id ? (
+            <Button mode="text" onPress={() => setConfirmArchiveGoalId('')}>
+              Cancel Archive
+            </Button>
+          ) : null}
+
+          {editingGoalId === goal.id ? (
+            <GoalEditCard
+              goal={goal}
+              loading={loading}
+              onSave={async (values) => {
+                await editGoal({ goalId: goal.id, values, squadId: selectedSquadId, uid: user.uid });
+                setEditingGoalId('');
+              }}
+              onCancel={() => setEditingGoalId('')}
+            />
+          ) : null}
 
           <CheckinForm loading={loading} onSubmit={(input) => checkInGoal({ goal, squadId: selectedSquadId, uid: user.uid, input })} />
         </View>
@@ -224,12 +307,20 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
   },
+  editCard: {
+    backgroundColor: '#F7F7F7',
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 6,
+    padding: 10,
+  },
   checkinCard: {
     gap: 8,
     marginTop: 8,
   },
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   error: {

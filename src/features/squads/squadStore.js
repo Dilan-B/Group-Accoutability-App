@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 
 import {
+  closeSquad,
   createSquad,
   joinSquadByInviteCode,
+  leaveSquad,
   listMembersForSquad,
   listSquadsForUser,
 } from './squadService';
@@ -23,7 +25,7 @@ export const useSquadStore = create((set, get) => ({
 
     try {
       const squads = await listSquadsForUser(uid);
-      const selectedSquadId = get().selectedSquadId || squads[0]?.id || null;
+      const selectedSquadId = squads.find((item) => item.id === get().selectedSquadId)?.id || squads[0]?.id || null;
 
       set({ squads, selectedSquadId, loading: false });
 
@@ -56,6 +58,26 @@ export const useSquadStore = create((set, get) => ({
       await get().loadSquads(user.uid);
     } catch (error) {
       set({ loading: false, error: error instanceof Error ? error.message : 'Could not join squad.' });
+    }
+  },
+
+  leaveSelectedSquad: async ({ squadId, uid }) => {
+    set({ loading: true, error: '' });
+    try {
+      await leaveSquad({ squadId, uid });
+      await get().loadSquads(uid);
+    } catch (error) {
+      set({ loading: false, error: error instanceof Error ? error.message : 'Could not leave squad.' });
+    }
+  },
+
+  closeSelectedSquad: async ({ squadId, uid }) => {
+    set({ loading: true, error: '' });
+    try {
+      await closeSquad({ squadId });
+      await get().loadSquads(uid);
+    } catch (error) {
+      set({ loading: false, error: error instanceof Error ? error.message : 'Could not close squad.' });
     }
   },
 

@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { Button, Chip, Divider, Text, TextInput } from 'react-native-paper';
 
 import { useAuthStore } from '../auth/authStore';
 import { useSquadStore } from './squadStore';
+import { canCloseSquad, canLeaveSquad } from './squadUtils';
 
 export function SquadScreen() {
   const user = useAuthStore((state) => state.user);
@@ -18,6 +19,10 @@ export function SquadScreen() {
   const createNewSquad = useSquadStore((state) => state.createNewSquad);
   const joinSquad = useSquadStore((state) => state.joinSquad);
   const selectSquad = useSquadStore((state) => state.selectSquad);
+  const leaveSelectedSquad = useSquadStore((state) => state.leaveSelectedSquad);
+  const closeSelectedSquad = useSquadStore((state) => state.closeSelectedSquad);
+
+  const [confirmManage, setConfirmManage] = useState(false);
 
   const createForm = useForm({ defaultValues: { name: '' } });
   const joinForm = useForm({ defaultValues: { inviteCode: '' } });
@@ -95,6 +100,52 @@ export function SquadScreen() {
             <Text>Selected: {selectedSquad.name}</Text>
             <Text>Invite code: {selectedSquad.inviteCode}</Text>
             <Text>Role: {selectedSquad.role}</Text>
+
+            {canLeaveSquad(selectedSquad.role) ? (
+              confirmManage ? (
+                <View style={styles.row}>
+                  <Button
+                    mode="contained"
+                    onPress={async () => {
+                      await leaveSelectedSquad({ squadId: selectedSquad.id, uid: user.uid });
+                      setConfirmManage(false);
+                    }}
+                  >
+                    Confirm Leave
+                  </Button>
+                  <Button mode="text" onPress={() => setConfirmManage(false)}>
+                    Cancel
+                  </Button>
+                </View>
+              ) : (
+                <Button mode="outlined" onPress={() => setConfirmManage(true)}>
+                  Leave Squad
+                </Button>
+              )
+            ) : null}
+
+            {canCloseSquad(selectedSquad.role) ? (
+              confirmManage ? (
+                <View style={styles.row}>
+                  <Button
+                    mode="contained"
+                    onPress={async () => {
+                      await closeSelectedSquad({ squadId: selectedSquad.id, uid: user.uid });
+                      setConfirmManage(false);
+                    }}
+                  >
+                    Confirm Close
+                  </Button>
+                  <Button mode="text" onPress={() => setConfirmManage(false)}>
+                    Cancel
+                  </Button>
+                </View>
+              ) : (
+                <Button mode="outlined" onPress={() => setConfirmManage(true)}>
+                  Close Squad
+                </Button>
+              )
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -137,8 +188,12 @@ const styles = StyleSheet.create({
     borderColor: '#DADADA',
     borderRadius: 8,
     borderWidth: 1,
-    gap: 4,
+    gap: 8,
     padding: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 8,
   },
   error: {
     color: '#B00020',

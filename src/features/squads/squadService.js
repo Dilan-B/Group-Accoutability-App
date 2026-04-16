@@ -12,10 +12,11 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 
 import { db } from '../../../firebase/client';
-import { canAddMember, generateInviteCode } from './squadUtils';
+import { canAddMember } from './squadUtils';
 
 function membershipDocId(squadId, uid) {
   return `${squadId}_${uid}`;
@@ -26,6 +27,10 @@ async function loadSquadMembers(squadId) {
   return snapshot.docs.map((item) => item.data());
 }
 
+function generateInviteCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
 export async function createSquad({ name, user }) {
   const inviteCode = generateInviteCode();
 
@@ -34,6 +39,7 @@ export async function createSquad({ name, user }) {
     inviteCode,
     createdBy: user.uid,
     memberCount: 1,
+    is_archived: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -102,6 +108,47 @@ export async function joinSquadByInviteCode({ inviteCode, user }) {
   };
 }
 
+export async function leaveSquad({ squadId, uid }) {
+  const squadRef = doc(db, 'squads', squadId);
+  const membershipRef = doc(db, 'squad_memberships', membershipDocId(squadId, uid));
+
+  await runTransaction(db, async (tx) => {
+    const membership = await tx.get(membershipRef);
+
+    if (!membership.exists()) {
+      return;
+    }
+
+    tx.delete(membershipRef);
+    tx.update(squadRef, {
+      memberCount: increment(-1),
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
+export async function closeSquad({ squadId }) {
+  const squadRef = doc(db, 'squads', squadId);
+  const membershipsSnapshot = await getDocs(
+    query(collection(db, 'squad_memberships'), where('squadId', '==', squadId), limit(100)),
+  );
+
+  const batch = writeBatch(db);
+
+  membershipsSnapshot.forEach((membership) => {
+    batch.delete(membership.ref);
+  });
+
+  batch.update(squadRef, {
+    is_archived: true,
+    memberCount: 0,
+    updatedAt: serverTimestamp(),
+    archivedAt: serverTimestamp(),
+  });
+
+  await batch.commit();
+}
+
 export async function listSquadsForUser(uid) {
   const membershipSnapshot = await getDocs(query(collection(db, 'squad_memberships'), where('uid', '==', uid)));
   const memberships = membershipSnapshot.docs.map((item) => item.data());
@@ -111,7 +158,7 @@ export async function listSquadsForUser(uid) {
       const squadDoc = await getDoc(doc(db, 'squads', membership.squadId));
       const data = squadDoc.data();
 
-      if (!data) {
+      if (!data || data.is_archived) {
         return null;
       }
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import {
+  archiveGoal,
   createCheckin,
   createGoal,
   listGoalsForSquadUser,
@@ -48,6 +49,16 @@ export const useGoalsStore = create((set, get) => ({
       await get().loadGoals({ squadId, uid });
     } catch (error) {
       set({ loading: false, error: error instanceof Error ? error.message : 'Failed updating goal.' });
+    }
+  },
+
+  archiveGoalById: async ({ goalId, squadId, uid }) => {
+    set({ loading: true, error: '' });
+    try {
+      await archiveGoal({ goalId });
+      await get().loadGoals({ squadId, uid });
+    } catch (error) {
+      set({ loading: false, error: error instanceof Error ? error.message : 'Failed archiving goal.' });
     }
   },
 

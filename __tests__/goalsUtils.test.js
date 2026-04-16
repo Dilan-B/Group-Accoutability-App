@@ -2,6 +2,7 @@ import {
   buildCheckInPayload,
   buildGoalFormDefaults,
   canCreateActiveGoal,
+  isGoalVisible,
   normalizeGoalInput,
 } from '../src/features/goals/goalsUtils';
 
@@ -53,5 +54,10 @@ describe('goals utils', () => {
       deadline: 'Thursday',
       success_criteria: 'All chapters reviewed',
     });
+  });
+
+  it('hides archived goals from active list logic', () => {
+    expect(isGoalVisible({ is_archived: false })).toBe(true);
+    expect(isGoalVisible({ is_archived: true })).toBe(false);
   });
 });
