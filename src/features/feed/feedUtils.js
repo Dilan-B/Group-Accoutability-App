@@ -36,3 +36,30 @@ export function applyReaction(current, uid, reaction) {
 
   return { counts, byUser };
 }
+
+/**
+ * @param {{ actor_display_name?: string, actor_uid?: string }} item
+ */
+export function getFeedActorLabel(item) {
+  if (item.actor_display_name?.trim()) {
+    return item.actor_display_name.trim();
+  }
+
+  if (item.actor_uid?.trim()) {
+    return item.actor_uid.trim();
+  }
+
+  return 'A squad member';
+}
+
+/**
+ * @param {{ seconds?: number } | null | undefined} timestamp
+ */
+export function formatFeedTimestamp(timestamp) {
+  if (!timestamp?.seconds) {
+    return 'just now';
+  }
+
+  const date = new Date(timestamp.seconds * 1000);
+  return date.toLocaleString();
+}

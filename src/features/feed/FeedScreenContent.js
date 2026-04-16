@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Button, Text } from 'react-native-paper';
 
 import { useAuthStore } from '../auth/authStore';
 import { useSquadStore } from '../squads/squadStore';
 import { useFeedStore } from './feedStore';
+import { formatFeedTimestamp, getFeedActorLabel } from './feedUtils';
 
 const REACTIONS = [
   { key: 'fire', label: '🔥 fire' },
@@ -47,6 +49,16 @@ export function FeedScreenContent() {
     loadFeed(selectedSquadId);
   }, [loadFeed, selectedSquadId]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedSquadId) {
+        return;
+      }
+
+      loadFeed(selectedSquadId);
+    }, [loadFeed, selectedSquadId]),
+  );
+
   if (!selectedSquadId) {
     return (
       <View style={styles.centered}>
@@ -71,6 +83,9 @@ export function FeedScreenContent() {
 
       {items.map((item) => (
         <View key={item.id} style={styles.card}>
+          <Text style={styles.metaText}>
+            {getFeedActorLabel(item)} · {formatFeedTimestamp(item.created_at)}
+          </Text>
           <Text>{renderMessage(item)}</Text>
           {item.goal_title ? <Text>Goal: {item.goal_title}</Text> : null}
 
@@ -112,6 +127,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     padding: 12,
+  },
+  metaText: {
+    color: '#555555',
+    fontSize: 12,
   },
   row: {
     flexDirection: 'row',

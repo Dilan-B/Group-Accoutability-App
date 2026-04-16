@@ -1,4 +1,4 @@
-import { applyReaction, emptyReactions } from '../src/features/feed/feedUtils';
+import { applyReaction, emptyReactions, formatFeedTimestamp, getFeedActorLabel } from '../src/features/feed/feedUtils';
 
 describe('feed utils', () => {
   it('creates zeroed reaction counters', () => {
@@ -20,5 +20,21 @@ describe('feed utils', () => {
     expect(second.counts.fire).toBe(0);
     expect(second.counts.clap).toBe(1);
     expect(second.byUser.u1).toBe('clap');
+  });
+
+  it('formats actor labels from display name, uid, or default', () => {
+    expect(getFeedActorLabel({ actor_display_name: '  Alex  ', actor_uid: 'uid_1' })).toBe('Alex');
+    expect(getFeedActorLabel({ actor_uid: 'uid_1' })).toBe('uid_1');
+    expect(getFeedActorLabel({})).toBe('A squad member');
+  });
+
+  it('formats timestamps defensively for feed cards', () => {
+    expect(formatFeedTimestamp()).toBe('just now');
+    expect(formatFeedTimestamp({})).toBe('just now');
+
+    const formatted = formatFeedTimestamp({ seconds: 1713312000 });
+    expect(typeof formatted).toBe('string');
+    expect(formatted.length).toBeGreaterThan(0);
+    expect(formatted).not.toBe('just now');
   });
 });
