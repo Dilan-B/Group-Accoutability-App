@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../../../firebase/client';
+import { createFeedItem } from '../feed/feedService';
 import { canCreateActiveGoal, isGoalVisible, normalizeGoalInput } from './goalsUtils';
 
 export async function listGoalsForSquadUser({ squadId, uid }) {
@@ -46,6 +47,14 @@ export async function createGoal({ squadId, uid, values, existingGoals }) {
     is_archived: false,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
+  });
+
+  await createFeedItem({
+    squad_id: squadId,
+    actor_uid: uid,
+    type: 'goal_created',
+    goal_title: normalized.title,
+    message: `Created goal: ${normalized.title}`,
   });
 }
 
@@ -86,5 +95,16 @@ export async function createCheckin({ goal, uid, squadId, payload }) {
     progress_update: payload.progress_update,
     completed: true,
     created_at: serverTimestamp(),
+  });
+
+  await createFeedItem({
+    squad_id: squadId,
+    actor_uid: uid,
+    type: 'checkin',
+    goal_id: goal.id,
+    goal_title: goal.title,
+    note: payload.note,
+    progress_update: payload.progress_update,
+    message: payload.note || payload.progress_update || 'Checked in on a goal.',
   });
 }

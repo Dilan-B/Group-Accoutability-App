@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 
 import { db } from '../../../firebase/client';
+import { createFeedItem } from '../feed/feedService';
 import { canAddMember } from './squadUtils';
 
 function membershipDocId(squadId, uid) {
@@ -49,6 +50,13 @@ export async function createSquad({ name, user }) {
     uid: user.uid,
     role: 'admin',
     joinedAt: serverTimestamp(),
+  });
+
+  await createFeedItem({
+    squad_id: squadRef.id,
+    actor_uid: user.uid,
+    type: 'system',
+    message: `${name.trim()} squad created.`,
   });
 
   return {
@@ -100,6 +108,13 @@ export async function joinSquadByInviteCode({ inviteCode, user }) {
   });
 
   const updated = await getDoc(squadRef);
+
+  await createFeedItem({
+    squad_id: squadDoc.id,
+    actor_uid: user.uid,
+    type: 'system',
+    message: 'A member joined the squad.',
+  });
 
   return {
     id: squadDoc.id,

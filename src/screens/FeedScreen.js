@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../components/PlaceholderScreen';
+import { FeedScreenContent } from '../features/feed/FeedScreenContent';
 
 export function FeedScreen() {
-  return <PlaceholderScreen title="Feed" description="Squad activity will appear here in Milestone 4." />;
+  return <FeedScreenContent />;
 }
