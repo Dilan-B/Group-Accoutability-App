@@ -1,4 +1,9 @@
-import { buildCheckInPayload, canCreateActiveGoal, normalizeGoalInput } from '../src/features/goals/goalsUtils';
+import {
+  buildCheckInPayload,
+  buildGoalFormDefaults,
+  canCreateActiveGoal,
+  normalizeGoalInput,
+} from '../src/features/goals/goalsUtils';
 
 describe('goals utils', () => {
   it('limits active goals to 8 per squad/user', () => {
@@ -16,16 +21,12 @@ describe('goals utils', () => {
         description: '  polish goals  ',
         deadline: ' Friday ',
         success_criteria: ' PR merged ',
-        target_value: '100',
-        target_unit: ' dollars ',
       }),
     ).toEqual({
       title: 'Finish coding milestone 3',
       description: 'polish goals',
       deadline: 'Friday',
       success_criteria: 'PR merged',
-      target_value: 100,
-      target_unit: 'dollars',
     });
   });
 
@@ -36,5 +37,21 @@ describe('goals utils', () => {
     });
 
     expect(buildCheckInPayload({})).toEqual({ note: '', progress_update: '' });
+  });
+
+  it('builds edit form defaults from selected goal', () => {
+    expect(
+      buildGoalFormDefaults({
+        title: 'Study for AP Physics test',
+        description: '',
+        deadline: 'Thursday',
+        success_criteria: 'All chapters reviewed',
+      }),
+    ).toEqual({
+      title: 'Study for AP Physics test',
+      description: '',
+      deadline: 'Thursday',
+      success_criteria: 'All chapters reviewed',
+    });
   });
 });

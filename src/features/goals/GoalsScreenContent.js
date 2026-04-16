@@ -6,6 +6,7 @@ import { Button, Divider, Text, TextInput } from 'react-native-paper';
 import { useAuthStore } from '../auth/authStore';
 import { useSquadStore } from '../squads/squadStore';
 import { useGoalsStore } from './goalsStore';
+import { buildGoalFormDefaults } from './goalsUtils';
 
 function CheckinForm({ onSubmit, loading }) {
   const { control, handleSubmit, reset } = useForm({ defaultValues: { note: '', progress_update: '' } });
@@ -28,7 +29,7 @@ function CheckinForm({ onSubmit, loading }) {
             label="Progress Update (Optional)"
             value={value}
             onChangeText={onChange}
-            placeholder="What changed since last check-in?"
+            placeholder="I worked on this / made progress / completed today"
           />
         )}
       />
@@ -40,7 +41,7 @@ function CheckinForm({ onSubmit, loading }) {
           reset({ note: '', progress_update: '' });
         })}
       >
-        Check-in
+        Log Check-in
       </Button>
     </View>
   );
@@ -63,14 +64,7 @@ export function GoalsScreenContent() {
   const [editingGoalId, setEditingGoalId] = useState('');
 
   const { control, handleSubmit, reset } = useForm({
-    defaultValues: {
-      title: '',
-      description: '',
-      deadline: '',
-      success_criteria: '',
-      target_value: '',
-      target_unit: '',
-    },
+    defaultValues: buildGoalFormDefaults(null),
   });
 
   useEffect(() => {
@@ -84,26 +78,7 @@ export function GoalsScreenContent() {
   const editingGoal = useMemo(() => goals.find((goal) => goal.id === editingGoalId) || null, [goals, editingGoalId]);
 
   useEffect(() => {
-    if (!editingGoal) {
-      reset({
-        title: '',
-        description: '',
-        deadline: '',
-        success_criteria: '',
-        target_value: '',
-        target_unit: '',
-      });
-      return;
-    }
-
-    reset({
-      title: editingGoal.title || '',
-      description: editingGoal.description || '',
-      deadline: editingGoal.deadline || '',
-      success_criteria: editingGoal.success_criteria || '',
-      target_value: editingGoal.target_value == null ? '' : String(editingGoal.target_value),
-      target_unit: editingGoal.target_unit || '',
-    });
+    reset(buildGoalFormDefaults(editingGoal));
   }, [editingGoal, reset]);
 
   if (!selectedSquadId) {
@@ -143,7 +118,7 @@ export function GoalsScreenContent() {
               label="Deadline (Optional)"
               value={value}
               onChangeText={onChange}
-              placeholder="e.g. 2026-05-01 or Friday"
+              placeholder="e.g. Friday or 2026-05-01"
             />
           )}
         />
@@ -158,27 +133,6 @@ export function GoalsScreenContent() {
               onChangeText={onChange}
               multiline
             />
-          )}
-        />
-        <Text variant="labelMedium">Advanced (Optional)</Text>
-        <Controller
-          control={control}
-          name="target_value"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              mode="outlined"
-              label="Target Value"
-              value={value}
-              onChangeText={onChange}
-              keyboardType="numeric"
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="target_unit"
-          render={({ field: { onChange, value } }) => (
-            <TextInput mode="outlined" label="Target Unit" value={value} onChangeText={onChange} />
           )}
         />
 
@@ -216,7 +170,7 @@ export function GoalsScreenContent() {
       {goals.map((goal) => (
         <View key={goal.id} style={styles.goalCard}>
           <Text variant="titleMedium">{goal.title}</Text>
-          {!!goal.description ? <Text>{goal.description}</Text> : <Text>No description</Text>}
+          {!!goal.description ? <Text>{goal.description}</Text> : null}
           {!!goal.deadline ? <Text>Deadline: {goal.deadline}</Text> : null}
           {!!goal.success_criteria ? <Text>Done looks like: {goal.success_criteria}</Text> : null}
           <Text>Status: {goal.is_active ? 'Active' : 'Paused'}</Text>

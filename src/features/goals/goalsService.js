@@ -40,8 +40,6 @@ export async function createGoal({ squadId, uid, values, existingGoals }) {
     description: normalized.description,
     deadline: normalized.deadline || null,
     success_criteria: normalized.success_criteria || null,
-    target_value: normalized.target_value,
-    target_unit: normalized.target_unit || null,
     is_active: true,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
@@ -56,8 +54,6 @@ export async function updateGoal({ goalId, values }) {
     description: normalized.description,
     deadline: normalized.deadline || null,
     success_criteria: normalized.success_criteria || null,
-    target_value: normalized.target_value,
-    target_unit: normalized.target_unit || null,
     updated_at: serverTimestamp(),
   });
 }

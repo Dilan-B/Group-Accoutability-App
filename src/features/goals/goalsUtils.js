@@ -12,20 +12,31 @@ export function canCreateActiveGoal(goals) {
  *  description?: string,
  *  deadline?: string,
  *  success_criteria?: string,
- *  target_value?: string|number|null,
- *  target_unit?: string,
  * }} input
  */
 export function normalizeGoalInput(input) {
-  const valueRaw = input.target_value == null ? '' : String(input.target_value).trim();
-
   return {
     title: (input.title || '').trim(),
     description: (input.description || '').trim(),
     deadline: (input.deadline || '').trim(),
     success_criteria: (input.success_criteria || '').trim(),
-    target_value: valueRaw === '' ? null : Number(valueRaw),
-    target_unit: (input.target_unit || '').trim(),
+  };
+}
+
+/**
+ * @param {{
+ *  title?: string,
+ *  description?: string,
+ *  deadline?: string|null,
+ *  success_criteria?: string|null,
+ * } | null} goal
+ */
+export function buildGoalFormDefaults(goal) {
+  return {
+    title: goal?.title || '',
+    description: goal?.description || '',
+    deadline: goal?.deadline || '',
+    success_criteria: goal?.success_criteria || '',
   };
 }
 
